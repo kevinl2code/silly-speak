@@ -1,4 +1,4 @@
-import React, { useEffect, useState, } from 'react'
+import React, { useEffect, useState, useRef } from 'react'
 import M from "materialize-css"
 
 import chuckNorris from '../apis/chuckNorris'
@@ -7,7 +7,7 @@ import funTranslations from '../apis/funTranslations'
 const SillyFacts = () => {
     
     const [ language, setLanguage ] = useState('')
-    const [ category, setCategory ] = useState('random')
+    const [ category, setCategory ] = useState('animal')
     const [ fact, setFact ] = useState('')
     const [ translatedFact, setTranslatedFact ] = useState('')
 
@@ -15,33 +15,42 @@ const SillyFacts = () => {
         M.AutoInit()
     }, [])
 
+    useEffect(() => {
+        M.updateTextFields()
+    }, [translatedFact])
+
+    const isInitialMount = useRef(true);
+
+    useEffect(() => {
+      if (isInitialMount.current) {
+         isInitialMount.current = false;
+      } else {
+        const handleTranslate = async () => {
+            const translation = await funTranslations.get(language, {
+                params: {
+                    text: fact
+                }
+            })
+            setTranslatedFact(translation.data.contents.translated)
+        }
+        handleTranslate()
+      }
+    }, [fact])
 
     const handleFetchFact = async () => {
-        const newFact = await chuckNorris.get('random', {
+        const data = await chuckNorris.get('random', {
             params: {
                 category: category
             }
         })
-        setFact(newFact.data.value)
+        
+        setFact(data.data.value)
     }
 
-    const handleTranslate = async () => {
-        const translation = await funTranslations.get(language, {
-            params: {
-                text: fact
-            }
-        })
-        setTranslatedFact(translation.data.contents.translated)
+    const handleSubmit = () => {
+        handleFetchFact()
+        // handleTranslate()
     }
-
-    const handleSubmit = async () => {
-        await handleFetchFact()
-        await handleTranslate()
-    }
-
-
-    console.log(fact)
-    console.log(translatedFact)
 
     return (
         <div className="row">
@@ -57,14 +66,14 @@ const SillyFacts = () => {
                         <select onChange={(e) => setLanguage(e.target.value)} defaultValue={'DEFAULT'}>
                             <option value="DEFAULT" disabled>Make your choice</option>
                             <option value="pirate">Pirate</option>
-                            <option value="ermahgerd">Ermahgerd</option>
+                            <option value="yoda">Yoda</option>
                             <option value="redneck">Redneck</option>
                         </select>
                         <label>Languages/Dialects</label>
                     </div>
                     <div className="input-field col s12">
-                        <select onChange={(e) => setCategory(e.target.value)} defaultValue={'random'}>
-                            <option value="random">Random</option>
+                        <select onChange={(e) => setCategory(e.target.value)} defaultValue={''}>
+                            {/*<option value="random">Random</option>*/}
                             <option value="animal">Animal</option>
                             <option value="career">Career</option>
                             <option value="dev">Dev</option>
