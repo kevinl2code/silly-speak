@@ -2,40 +2,42 @@ import React, { useEffect, useState, useRef } from 'react'
 import M from "materialize-css"
 
 import chuckNorris from '../apis/chuckNorris'
-import funTranslations from '../apis/funTranslations'
+import { handleTranslate, renderCategories } from '../scripts'
 
 const SillyFacts = () => {
     
     const [ language, setLanguage ] = useState('')
-    const [ category, setCategory ] = useState('animal')
+    const [ categories, setCategories ] = useState([])
+    const [ category, setCategory ] = useState('')
+    const [ loading, setLoading ] =useState(true)
     const [ fact, setFact ] = useState('')
     const [ translatedFact, setTranslatedFact ] = useState('')
+    
+    const isInitialMount = useRef(true);
 
     useEffect(() => {
         M.AutoInit()
-    }, [])
+        const fetchCategories = async () => {
+            const fetchedCategories = await chuckNorris.get('categories')
+            setCategories(fetchedCategories.data)
+            setLoading(false)
+        }
+        fetchCategories()
+
+    }, [loading])
 
     useEffect(() => {
         M.updateTextFields()
     }, [translatedFact])
 
-    const isInitialMount = useRef(true);
-
     useEffect(() => {
-      if (isInitialMount.current) {
-         isInitialMount.current = false;
-      } else {
-        const handleTranslate = async () => {
-            const translation = await funTranslations.get(language, {
-                params: {
-                    text: fact
-                }
-            })
-            setTranslatedFact(translation.data.contents.translated)
-        }
-        handleTranslate()
-      }
-    }, [fact])
+        if (isInitialMount.current) {
+            isInitialMount.current = false;
+         } else if (fact.length > 1) {
+           handleTranslate(language, fact, setTranslatedFact)
+         }
+    }, [fact, language])
+
 
     const handleFetchFact = async () => {
         const data = await chuckNorris.get('random', {
@@ -43,13 +45,7 @@ const SillyFacts = () => {
                 category: category
             }
         })
-        
         setFact(data.data.value)
-    }
-
-    const handleSubmit = () => {
-        handleFetchFact()
-        // handleTranslate()
     }
 
     return (
@@ -60,11 +56,11 @@ const SillyFacts = () => {
             <div className="col s6">
                 <form className="col s12" onSubmit={(e) => {
                     e.preventDefault()
-                    handleSubmit()
+                    handleFetchFact()
                 }}>
                     <div className="input-field col s12">
                         <select onChange={(e) => setLanguage(e.target.value)} defaultValue={'DEFAULT'}>
-                            <option value="DEFAULT" disabled>Make your choice</option>
+                            <option value="DEFAULT" disabled>Select</option>
                             <option value="pirate">Pirate</option>
                             <option value="yoda">Yoda</option>
                             <option value="redneck">Redneck</option>
@@ -72,23 +68,12 @@ const SillyFacts = () => {
                         <label>Languages/Dialects</label>
                     </div>
                     <div className="input-field col s12">
-                        <select onChange={(e) => setCategory(e.target.value)} defaultValue={''}>
-                            {/*<option value="random">Random</option>*/}
-                            <option value="animal">Animal</option>
-                            <option value="career">Career</option>
-                            <option value="dev">Dev</option>
-                            <option value="explicit">Explicit</option>
-                            <option value="fashion">Fashion</option>
-                            <option value="food">Food</option>
-                            <option value="history">History</option>
-                            <option value="money">Money</option>
-                            <option value="movie">Movie</option>
-                            <option value="music">Music</option>
-                            <option value="political">Political</option>
-                            <option value="religion">Religion</option>
-                            <option value="science">Science</option>
-                            <option value="sport">Sport</option>
-                            <option value="travel">Travel</option>
+                        <select
+                            onChange={(e) => setCategory(e.target.value)}
+                            defaultValue={''}
+                            disabled={loading}
+                        >
+                            {renderCategories(categories)}
                         </select>
                         <label>Category</label>
                     </div>
@@ -107,8 +92,14 @@ const SillyFacts = () => {
             </div>
             <div className="col s6">
                 <div className="input-field col s12">
-                    {/*When populating with translated text, add the class "active"*/}
-                    <textarea  focus="true" id="textarea2" className="materialize-textarea active" style={{height: "200px"}} defaultValue={translatedFact} disabled={true}></textarea>
+                    <textarea  
+                        focus="true" 
+                        id="textarea2" 
+                        className="materialize-textarea active" 
+                        style={{height: "300px"}} 
+                        defaultValue={translatedFact} 
+                        disabled={true}
+                    ></textarea>
                     <label htmlFor="textarea2">Fact</label>
                 </div>
             </div>

@@ -4,6 +4,7 @@ import Navbar from './Navbar'
 import Landing from './Landing'
 import Translator from './Translator'
 import SillyFacts from './SillyFacts'
+import Contact from './Contact'
 
 const App = () => {
     return(
@@ -14,6 +15,7 @@ const App = () => {
                     <Route path="/" exact component={Landing} />
                     <Route path="/translate" component={Translator} />
                     <Route path="/facts" component={SillyFacts} />
+                    <Route path="/contact" component={Contact} />
                 </Switch>
             </BrowserRouter>   
         </div>

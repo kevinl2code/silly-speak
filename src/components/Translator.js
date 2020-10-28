@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import M from "materialize-css"
 
-import funTranslations from '../apis/funTranslations'
+import { handleTranslate } from '../scripts'
 
 const Translator = () => {
 
@@ -17,17 +17,7 @@ const Translator = () => {
         M.updateTextFields()
     }, [englishText, translatedText])
 
-    
-
-    const handleTranslate = async () => {
-        const translation = await funTranslations.get(language, {
-            params: {
-                text: englishText
-            }
-        })
-        setTranslatedText(translation.data.contents.translated)
-    }
-
+    // Need to add validation to the form
     return(
         <div className="row">
             <div className="col s12">
@@ -35,13 +25,13 @@ const Translator = () => {
             </div>
             <form className="col s12" onSubmit={(e) => {
                 e.preventDefault()
-                handleTranslate()
+                handleTranslate(language, englishText, setTranslatedText)
                 console.log(e)}}>
                 <div className="input-field col s12">
                     <select onChange={(e) => setLanguage(e.target.value)} defaultValue={'DEFAULT'}>
-                        <option value="DEFAULT" disabled>Make your choice</option>
+                        <option value="DEFAULT" disabled>Select</option>
                         <option value="pirate">Pirate</option>
-                        <option value="ermahgerd">Ermahgerd</option>
+                        <option value="yoda">Yoda</option>
                         <option value="redneck">Redneck</option>
                     </select>
                     <label>Languages/Dialects</label>
